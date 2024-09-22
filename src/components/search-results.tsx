@@ -50,15 +50,15 @@ export function SearchResults({ results }: { results: SearchResult[] }) {
             Telefon: {result.contact.phone}, Email: {result.contact.email}
           </p>
           <p className="text-sm">
-            Forma péče: {result.specialization.FormaPece}, Druh péče: {result.specialization.DruhPece}
+            Forma péče: {result.specialization.formapece}, Druh péče: {result.specialization.druhpece}
           </p>
           <p className="text-sm">
-            Odborný zástupce: {result.specialization.OdbornyZastupce}
+            Odborný zástupce: {result.specialization.odbornyzastupce}
           </p>
           <p className="text-sm">
-            Kraj: {result.region.Kraj}, Okres: {result.region.Okres}
+            Kraj: {result.region.kraj}, Okres: {result.region.okres}
           </p>
-          <p className="text-sm">IČO: {result.Ico}</p>
+          <p className="text-sm">IČO: {result.ico}</p>
           {result.url && (
             <a href={result.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
               Webové stránky

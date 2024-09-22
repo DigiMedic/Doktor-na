@@ -13,7 +13,19 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+// Přidejte tuto funkci pro testování připojení
+async function testSupabaseConnection() {
+  try {
+    const { data, error } = await supabase.from('healthcareprovidors').select('*').limit(1)
+    if (error) throw error
+    console.log('Úspěšné připojení k Supabase:', data)
+  } catch (error) {
+    console.error('Chyba při připojení k Supabase:', error)
+  }
+}
+
 export async function POST(req: NextRequest) {
+  await testSupabaseConnection()
   const body = await req.json();
   const { query } = body;
 
