@@ -2,38 +2,36 @@ CREATE EXTENSION IF NOT EXISTS "vector";
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- content table
-CREATE TABLE aitools (
+CREATE TABLE healthcare_providers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  title TEXT NOT NULL,
+  name TEXT NOT NULL,
   url TEXT NOT NULL,
   description TEXT,
-  content TEXT,
-  screenshot_url TEXT,
-  full_content TEXT,
-  detail TEXT,
-  cat TEXT,
-  ext_info JSONB,
-  total_visits_last_three_months INT,
-  visits_last_month INT,
-  bounce_rate DECIMAL,
-  page_per_visit DECIMAL,
-  time_on_site DECIMAL,
-  traffic_detail JSON;
+  contact_info TEXT,
+  DruhZarizeni TEXT,
+  OborPece TEXT,
+  FormaPece TEXT,
+  DruhPece TEXT,
+  OdbornyZastupce TEXT,
+  address TEXT,
+  services TEXT,
+  ext_info JSONB
 );
+
 -- chunk table
-CREATE TABLE aitools_chunk (
+CREATE TABLE healthcare_providers_chunk (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   chunk_text TEXT,
   metadata JSONB,
-  tool_id UUID NOT NULL,
+  provider_id UUID NOT NULL,
   embedding vector(768),
-  FOREIGN KEY (tool_id) REFERENCES aitools(id)
+  FOREIGN KEY (provider_id) REFERENCES healthcare_providers(id)
 );
 
 --  hnsw index for query performance
-create index on aitools_chunk using hnsw (embedding vector_l2_ops);
+create index on healthcare_providers_chunk using hnsw (embedding vector_l2_ops);
 
 -- rpc function for supabase client
 create or replace function match_embeddings (
@@ -44,24 +42,47 @@ create or replace function match_embeddings (
 returns table (
   id UUID,
   metadata JSONB,
-  tool_id text,
-  chunk_text text,
+  provider_id UUID,
+  chunk_text TEXT,
   similarity float,
-  screenshot_url text
+  name TEXT,
+  url TEXT,
+  description TEXT,
+  contact_info TEXT,
+  DruhZarizeni TEXT,
+  OborPece TEXT,
+  FormaPece TEXT,
+  DruhPece TEXT,
+  OdbornyZastupce TEXT,
+  address TEXT,
+  services TEXT
 )
-language sql stable
+language plpgsql
 as $$
+begin
+  return query
   select
-    aitools_chunk.id,
-    aitools_chunk.metadata,
-    aitools_chunk.tool_id,
-    aitools_chunk.chunk_text,
-    1 - (aitools_chunk.embedding <=> query_embedding) as similarity,
-    aitools.screenshot_url
-  from aitools_chunk
-  join aitools on aitools_chunk.tool_id = aitools.id
-  where 1 - (aitools_chunk.embedding <=> query_embedding) > match_threshold
-  order by (aitools_chunk.embedding <=> query_embedding) asc
+    healthcare_providers_chunk.id,
+    healthcare_providers_chunk.metadata,
+    healthcare_providers_chunk.provider_id,
+    healthcare_providers_chunk.chunk_text,
+    1 - (healthcare_providers_chunk.embedding <=> query_embedding) as similarity,
+    healthcare_providers.name,
+    healthcare_providers.url,
+    healthcare_providers.description,
+    healthcare_providers.contact_info,
+    healthcare_providers.DruhZarizeni,
+    healthcare_providers.OborPece,
+    healthcare_providers.FormaPece,
+    healthcare_providers.DruhPece,
+    healthcare_providers.OdbornyZastupce,
+    healthcare_providers.address,
+    healthcare_providers.services
+  from healthcare_providers_chunk
+  join healthcare_providers on healthcare_providers_chunk.provider_id = healthcare_providers.id
+  where 1 - (healthcare_providers_chunk.embedding <=> query_embedding) > match_threshold
+  order by similarity desc
   limit match_count;
+end;
 $$;
 

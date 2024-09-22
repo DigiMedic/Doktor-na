@@ -20,10 +20,9 @@ const NewChatButton = () => {
 };
 
 const TextLogo = () => {
-  // return <></>;
   return (
-    <div className="text-2xl font-medium hidden sm:block">
-      {SiteConfig.name}
+    <div className="text-2xl font-bold font-mono hidden sm:block">
+      DigiMedic
     </div>
   );
 };
@@ -40,29 +39,33 @@ export function Navbar() {
       <div className="flex items-center gap-2 p-2">
         <Link href="/" passHref onClick={() => (location.href = "/")}>
           <img
-            src={theme === "light" ? "/logo.svg" : "/logo.svg"}
-            alt="Logo"
-            className="w-4 h-4 sm:w-8 sm:h-8"
+            src={theme === "light" ? "/logo-blue.svg" : "/logo-blue.svg"}
+            alt="DigiMedic Logo"
+            className="w-8 h-8 sm:w-10 sm:h-10"
           />
         </Link>
         {onHomePage ? <TextLogo /> : <NewChatButton />}
       </div>
       <div className="flex items-center gap-4 pr-2">
         <ModeToggle />
-        <Link
-          href={LinkConfig.github}
-          target="_blank"
-          className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
-        >
-          <GitHubLogoIcon />
-        </Link>
-        <Link
-          href={LinkConfig.twitter}
-          target="_blank"
-          className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
-        >
-          <Icons.twitter className="w-3 h-3" />
-        </Link>
+        {LinkConfig.github && (
+          <Link
+            href={LinkConfig.github}
+            target="_blank"
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+          >
+            <GitHubLogoIcon />
+          </Link>
+        )}
+        {LinkConfig.twitter && (
+          <Link
+            href={LinkConfig.twitter}
+            target="_blank"
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+          >
+            <Icons.twitter className="w-3 h-3" />
+          </Link>
+        )}
       </div>
     </header>
   );
