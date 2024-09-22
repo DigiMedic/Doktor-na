@@ -1,88 +1,86 @@
 CREATE EXTENSION IF NOT EXISTS "vector";
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- content table
-CREATE TABLE healthcare_providers (
+-- Upravíme tabulku healthcareprovidors
+CREATE TABLE IF NOT EXISTS healthcareprovidors (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  name TEXT NOT NULL,
-  url TEXT NOT NULL,
-  description TEXT,
-  contact_info TEXT,
-  DruhZarizeni TEXT,
-  OborPece TEXT,
-  FormaPece TEXT,
-  DruhPece TEXT,
-  OdbornyZastupce TEXT,
-  address TEXT,
-  services TEXT,
-  ext_info JSONB
+  nazevzarizeni TEXT,
+  druhzarizeni TEXT,
+  obec TEXT,
+  psc BIGINT,
+  ulice TEXT,
+  cislodomovniorientacni TEXT,
+  kraj TEXT,
+  okres TEXT,
+  poskytovateltelefon TEXT,
+  poskytovateljfax TEXT,
+  poskytovateljmail TEXT,
+  poskytovatelweb TEXT,
+  ico BIGINT,
+  oborpece TEXT,
+  formapece TEXT,
+  druhpece TEXT,
+  odbornyzastupce TEXT,
+  embedding vector(768)
 );
 
--- chunk table
-CREATE TABLE healthcare_providers_chunk (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  chunk_text TEXT,
-  metadata JSONB,
-  provider_id UUID NOT NULL,
-  embedding vector(768),
-  FOREIGN KEY (provider_id) REFERENCES healthcare_providers(id)
-);
+-- Vytvoříme index pro vektorové vyhledávání
+CREATE INDEX IF NOT EXISTS healthcareprovidors_embedding_idx ON healthcareprovidors USING hnsw (embedding vector_l2_ops);
 
---  hnsw index for query performance
-create index on healthcare_providers_chunk using hnsw (embedding vector_l2_ops);
-
--- rpc function for supabase client
-create or replace function match_embeddings (
+-- Upravíme funkci match_embeddings
+CREATE OR REPLACE FUNCTION match_embeddings (
   query_embedding vector(768),
   match_threshold float,
   match_count int
 )
-returns table (
+RETURNS TABLE (
   id UUID,
-  metadata JSONB,
-  provider_id UUID,
-  chunk_text TEXT,
-  similarity float,
-  name TEXT,
-  url TEXT,
-  description TEXT,
-  contact_info TEXT,
-  DruhZarizeni TEXT,
-  OborPece TEXT,
-  FormaPece TEXT,
-  DruhPece TEXT,
-  OdbornyZastupce TEXT,
-  address TEXT,
-  services TEXT
+  nazevzarizeni TEXT,
+  druhzarizeni TEXT,
+  obec TEXT,
+  psc BIGINT,
+  ulice TEXT,
+  cislodomovniorientacni TEXT,
+  kraj TEXT,
+  okres TEXT,
+  poskytovateltelefon TEXT,
+  poskytovateljmail TEXT,
+  poskytovatelweb TEXT,
+  ico BIGINT,
+  oborpece TEXT,
+  formapece TEXT,
+  druhpece TEXT,
+  odbornyzastupce TEXT,
+  similarity float
 )
-language plpgsql
-as $$
-begin
-  return query
-  select
-    healthcare_providers_chunk.id,
-    healthcare_providers_chunk.metadata,
-    healthcare_providers_chunk.provider_id,
-    healthcare_providers_chunk.chunk_text,
-    1 - (healthcare_providers_chunk.embedding <=> query_embedding) as similarity,
-    healthcare_providers.name,
-    healthcare_providers.url,
-    healthcare_providers.description,
-    healthcare_providers.contact_info,
-    healthcare_providers.DruhZarizeni,
-    healthcare_providers.OborPece,
-    healthcare_providers.FormaPece,
-    healthcare_providers.DruhPece,
-    healthcare_providers.OdbornyZastupce,
-    healthcare_providers.address,
-    healthcare_providers.services
-  from healthcare_providers_chunk
-  join healthcare_providers on healthcare_providers_chunk.provider_id = healthcare_providers.id
-  where 1 - (healthcare_providers_chunk.embedding <=> query_embedding) > match_threshold
-  order by similarity desc
-  limit match_count;
-end;
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    healthcareprovidors.id,
+    healthcareprovidors.nazevzarizeni,
+    healthcareprovidors.druhzarizeni,
+    healthcareprovidors.obec,
+    healthcareprovidors.psc,
+    healthcareprovidors.ulice,
+    healthcareprovidors.cislodomovniorientacni,
+    healthcareprovidors.kraj,
+    healthcareprovidors.okres,
+    healthcareprovidors.poskytovateltelefon,
+    healthcareprovidors.poskytovateljmail,
+    healthcareprovidors.poskytovatelweb,
+    healthcareprovidors.ico,
+    healthcareprovidors.oborpece,
+    healthcareprovidors.formapece,
+    healthcareprovidors.druhpece,
+    healthcareprovidors.odbornyzastupce,
+    1 - (healthcareprovidors.embedding <=> query_embedding) AS similarity
+  FROM healthcareprovidors
+  WHERE 1 - (healthcareprovidors.embedding <=> query_embedding) > match_threshold
+  ORDER BY similarity DESC
+  LIMIT match_count;
+END;
 $$;
 

@@ -37,12 +37,9 @@ export function Navbar() {
   return (
     <header className="w-full flex fixed p-1 z-50 px-2 bg-background/95 justify-between items-center">
       <div className="flex items-center gap-2 p-2">
-        <Link href="/" passHref onClick={() => (location.href = "/")}>
-          <img
-            src={theme === "light" ? "/logo-blue.svg" : "/logo-blue.svg"}
-            alt="DigiMedic Logo"
-            className="w-8 h-8 sm:w-10 sm:h-10"
-          />
+        <Link href="/" className="flex items-center space-x-2">
+          <img src="https://utfs.io/f/NyKlEsePJFL1S6Kx7l2O8nK5CrB9quV1ojygEkAcI7Xe6WzT" alt="Logo" className="w-8 h-8" />
+          <span className="font-bold">{SiteConfig.name}</span>
         </Link>
         {onHomePage ? <TextLogo /> : <NewChatButton />}
       </div>
